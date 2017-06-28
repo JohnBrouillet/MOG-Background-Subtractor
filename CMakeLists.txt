@@ -3,12 +3,15 @@ project(mgg)
 find_package(OpenCV REQUIRED)
 
 set(SOURCES 
-	main.cpp 
-	utils.cpp
+	src/main.cpp 
+	src/utils.cpp
+	src/mgg_substractor.cpp
 	)
 
 set(HEADERS
-	utils.h
+	src/opencv_include.h
+	src/utils.h
+	src/mgg_substractor.h
 	)
 
 if(OPENMP_FOUND)
@@ -19,5 +22,5 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 	set(CMAKE_CXX_FLAGS "-O2 -march=corei7-avx")
 endif()
 
-add_executable(mgg main.cpp ${SOURCES} ${HEADERS})
+add_executable(mgg ${SOURCES} ${HEADERS})
 target_link_libraries(mgg ${OpenCV_LIBS})

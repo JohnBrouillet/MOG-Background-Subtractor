@@ -9,10 +9,7 @@
 #include <sys/stat.h>
 
 
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/video/video.hpp>
+#include "opencv_include.h"
 
 std::vector<std::string> open_files(std::string path = ".");
 bool save(cv::Mat& img, std::string directory, std::string name, std::string format);
