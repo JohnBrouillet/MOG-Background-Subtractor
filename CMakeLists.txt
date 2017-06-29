@@ -19,7 +19,7 @@ if(OPENMP_FOUND)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
 if(CMAKE_COMPILER_IS_GNUCXX)
-	set(CMAKE_CXX_FLAGS "-O2 -march=corei7-avx")
+	set(CMAKE_CXX_FLAGS "-O2 -march=corei7-avx -fopenmp")
 endif()
 
 add_executable(mgg ${SOURCES} ${HEADERS})

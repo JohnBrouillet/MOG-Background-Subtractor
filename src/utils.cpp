@@ -23,7 +23,7 @@ std::vector<std::string> open_files(std::string path)
     return files;
 }
 
-bool save(cv::Mat& img, std::string directory, std::string name, std::string format)
+bool checkMaskDirExist(std::string directory)
 {
 	struct stat info;
 	std::string dir = directory + "mask";
@@ -33,7 +33,8 @@ bool save(cv::Mat& img, std::string directory, std::string name, std::string for
 		std::cout << "Creation of mask in " + directory << std::endl;
 		
 		mkdir(dir.c_str(), 0700);
+        return 0;
 	}
-	bool success = cv::imwrite(directory + "mask/" + name + "." + format, img);
-	return success;
+	else
+        return 1;
 }

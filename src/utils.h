@@ -9,9 +9,7 @@
 #include <sys/stat.h>
 
 
-#include "opencv_include.h"
-
 std::vector<std::string> open_files(std::string path = ".");
-bool save(cv::Mat& img, std::string directory, std::string name, std::string format);
+bool checkMaskDirExist(std::string directory);
 
 #endif
