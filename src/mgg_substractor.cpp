@@ -8,6 +8,9 @@ MGGBackgroundSubstractor::MGGBackgroundSubstractor(int _N, int _ratio)
 
 void MGGBackgroundSubstractor::init(std::vector<Mat>& imgs)
 {
+	for(Mat& img : imgs)
+    	cv::resize(img, img, cv::Size(), 1.0/ratio, 1.0/ratio);
+    
 	std::cout << "Initialization" << std::endl;
 	Mat cube;
 	zipStdVecToMat(imgs, cube);
@@ -39,9 +42,7 @@ void MGGBackgroundSubstractor::zipStdVecToMat(std::vector<Mat>& imgs, Mat& outpu
 	int idx = 0;
 	for(const cv::Mat& img : imgs)
 	{
-	
-		uchar* data = img.data;
-		Mat tmp(1, WH, CV_8UC1, data);
+		Mat tmp(1, WH, CV_8UC1, img.data);
 		tmp.copyTo(cube.row(idx));
 		++idx;
 	}

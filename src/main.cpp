@@ -3,6 +3,8 @@
 #include "mgg_substractor.h"
 
 const int nb_frame_init = 10;
+const int nb_gauss = 3;
+const int downsample = 1;
 
 void cam_loop(cv::VideoCapture& cap)
 {
@@ -14,7 +16,7 @@ void cam_loop(cv::VideoCapture& cap)
 		data.push_back(img);
 	}
 
-	MGGBackgroundSubstractor mg;
+	MGGBackgroundSubstractor mg(nb_gauss, downsample);
 	mg.init(data);
 
 	while(1)
