@@ -8,6 +8,7 @@ MGGBackgroundSubstractor::MGGBackgroundSubstractor(int _N, int _ratio)
 
 void MGGBackgroundSubstractor::init(std::vector<Mat>& imgs)
 {
+	std::cout << "Initialization" << std::endl;
 	Mat cube;
 	zipStdVecToMat(imgs, cube);
 
