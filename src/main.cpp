@@ -2,7 +2,7 @@
 #include "utils.h"
 #include "mgg_substractor.h"
 
-const int nb_frame_init = 10;
+const int nb_frame_init = 100;
 const int nb_gauss = 3;
 const int downsample = 1;
 
@@ -13,10 +13,11 @@ void cam_loop(cv::VideoCapture& cap)
 	{
 		cv::Mat img;
 		cap >> img;
+
 		data.push_back(img);
 	}
 
-	MGGBackgroundSubstractor mg(nb_gauss, downsample);
+	MOGBackgroundSubtraction mg(nb_gauss, downsample);
 	mg.init(data);
 
 	while(1)
@@ -24,28 +25,38 @@ void cam_loop(cv::VideoCapture& cap)
 		cv::Mat img;
 		cap >> img;
 		cv::imshow("MyWindow", img);
-		if (cv::waitKey(30) == 27) 
-   		{
-       	 	std::cout << "esc key is pressed by user" << std::endl;
-        	break; 
-   		}
+		
 	}
 }
 
 
 void image(std::string path)
 {
+	cv::namedWindow("MyWindow", CV_WINDOW_AUTOSIZE);
 	std::vector<std::string> files = open_files(path);
 	std::vector<cv::Mat> data;
 	for(int i = 0; i < nb_frame_init; i++)
 	{
 		cv::Mat img = cv::imread(std::string(path) + files[i], CV_LOAD_IMAGE_COLOR);
-		cv::cvtColor(img, img, CV_BGR2GRAY);
 		data.push_back(img);
 	}
 
-	MGGBackgroundSubstractor mg;
+	MOGBackgroundSubtraction mg(3,2);
 	mg.init(data);
+
+	for(int i = nb_frame_init; i < files.size(); i++)
+	{
+		cv::Mat img = cv::imread(std::string(path) + files[i], CV_LOAD_IMAGE_COLOR);
+		Mat mask = Mat::zeros(img.rows, img.cols, CV_8UC1);
+		mg.createMask(img, mask);
+		cv::imshow("MyWindow", mask);
+		if (cv::waitKey(30) == 27) 
+   		{
+       	 	std::cout << "esc key is pressed by user" << std::endl;
+        	break; 
+   		}
+	}
+
 }
 
 

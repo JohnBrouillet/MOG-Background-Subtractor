@@ -9,18 +9,29 @@
 using namespace cv;
 using namespace cv::ml;
 
-class MGGBackgroundSubstractor{
+const float k = 2.5;
+const float a = 0.5;
+
+class MOGBackgroundSubtraction{
 
 public:
-	MGGBackgroundSubstractor(int _N = 3, int _ratio = 1);
+	MOGBackgroundSubtraction(int _N = 3, int _ratio = 1);
 	void init(std::vector<Mat>& imgs);
+	void createMask(Mat& X, Mat& mask);
 
 private:
 	void zipStdVecToMat(std::vector<Mat>& imgs, Mat& output);
 	void train(Mat& line, int id_line, Mat& _cov, Mat& _mean, Mat& _weight);
+	void wrapTransform(Mat& input);
+	void isInGaussian(Mat& X, Mat& maha, Mat& mask_own);
+	void computeGaussianProbDensity(Mat& maha, Mat& probDensity);
+	void masking(Mat& X, Mat& mask, Mat& mask_own, Mat& least_prob);
+	void maj_case1();
+	void maj_case2(uchar X, Mat& least_prob, Mat& _cov, Mat& _mean, Mat& _weight);
 
 	int nb_gauss;
 	int ratio;
+	int WH;
 
 	Mat cov, mean, weight;
 
