@@ -5,6 +5,25 @@
 const int nb_frame_init = 50;
 const int nb_gauss = 3;
 const int downsample = 2;
+const double thresh = 500;
+
+void createBox(cv::Mat& mask, cv::Mat& img)
+{
+	std::vector<std::vector<cv::Point> > contours; 
+    std::vector<cv::Vec4i> hierarchy;
+    Rect bounding_rect;
+	cv::findContours(mask, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_TC89_KCOS );
+
+	for( int i = 0; i< contours.size(); i++ )
+    {   
+        double area = cv::contourArea(contours[i],false);
+        if(area > thresh){
+            bounding_rect = cv::boundingRect(contours[i]);
+            cv::rectangle(img, bounding_rect,  Scalar(0,255,0),1, 8,0);
+           // putText(im,"Moving object detected",Point(0,20),1,1,Scalar(0,255,0),1);
+        }       
+    }
+}
 
 void cam_loop(cv::VideoCapture& cap)
 {
@@ -25,13 +44,15 @@ void cam_loop(cv::VideoCapture& cap)
 	while(1)
 	{
 		
-		cv::Mat img;
+		cv::Mat img, img_clone;
 		cap >> img;
 		Mat mask = Mat::zeros(img.rows/downsample, img.cols/downsample, CV_8UC1);
-		
+		img_clone = img.clone();
+		cv::resize(img_clone, img_clone, cv::Size(), 1.0/downsample, 1.0/downsample);
+
 		mg.createMask(img, mask);
-	
-		cv::imshow("MyWindow", mask);
+		createBox(mask, img_clone);
+		cv::imshow("MyWindow", img_clone);
 		if (cv::waitKey(30) == 27) 
    		{
        	 	std::cout << "esc key is pressed by user" << std::endl;
@@ -69,14 +90,16 @@ void image(std::string path)
 	for(int i = nb_frame_init; i < files.size(); i++)
 	{
 		cv::Mat img = cv::imread(std::string(path) + files[i], CV_LOAD_IMAGE_COLOR);
-		Mat mask = Mat::zeros(img.rows/downsample, img.cols/downsample, CV_8UC1);
+		cv::Mat img_clone = img.clone();
+		cv::Mat mask = Mat::zeros(img.rows/downsample, img.cols/downsample, CV_8UC1);
 		auto t1 = std::chrono::high_resolution_clock::now();
 		mg.createMask(img, mask);
 		auto t2 = std::chrono::high_resolution_clock::now();
 	    std::chrono::duration<double, std::milli> fp_ms = t2 - t1;
 	    std::cout << "Mask created in " << fp_ms.count() << "ms" << std::endl;
+	    createBox(mask, img_clone);
 		cv::imshow("mask", mask);
-		cv::imshow("img", img);
+		cv::imshow("img", img_clone);
 		if (cv::waitKey(30) == 27) 
    		{
        	 	std::cout << "esc key is pressed by user" << std::endl;
