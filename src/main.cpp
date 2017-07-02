@@ -2,9 +2,9 @@
 #include "utils.h"
 #include "mgg_substractor.h"
 
-const int nb_frame_init = 100;
+const int nb_frame_init = 50;
 const int nb_gauss = 3;
-const int downsample = 1;
+const int downsample = 2;
 
 void cam_loop(cv::VideoCapture& cap)
 {
@@ -20,19 +20,41 @@ void cam_loop(cv::VideoCapture& cap)
 	MOGBackgroundSubtraction mg(nb_gauss, downsample);
 	mg.init(data);
 
+	int count = 0;
+	auto t1 = std::chrono::high_resolution_clock::now();
 	while(1)
 	{
+		
 		cv::Mat img;
 		cap >> img;
-		cv::imshow("MyWindow", img);
+		Mat mask = Mat::zeros(img.rows/downsample, img.cols/downsample, CV_8UC1);
 		
+		mg.createMask(img, mask);
+	
+		cv::imshow("MyWindow", mask);
+		if (cv::waitKey(30) == 27) 
+   		{
+       	 	std::cout << "esc key is pressed by user" << std::endl;
+        	break; 
+   		}
+		
+   		count++; 
+		if(count == 30)
+		{
+			auto t2 = std::chrono::high_resolution_clock::now();
+		    std::chrono::duration<double, std::milli> fp_ms = t2 - t1;
+		    std::cout << "FPS " << count / (fp_ms.count()*1e-3) << std::endl;
+		    count = 0;
+		    t1 = std::chrono::high_resolution_clock::now();
+		}
 	}
 }
 
 
 void image(std::string path)
 {
-	cv::namedWindow("MyWindow", CV_WINDOW_AUTOSIZE);
+	cv::namedWindow("mask", CV_WINDOW_AUTOSIZE);
+	cv::namedWindow("img", CV_WINDOW_AUTOSIZE);
 	std::vector<std::string> files = open_files(path);
 	std::vector<cv::Mat> data;
 	for(int i = 0; i < nb_frame_init; i++)
@@ -41,15 +63,20 @@ void image(std::string path)
 		data.push_back(img);
 	}
 
-	MOGBackgroundSubtraction mg(3,2);
+	MOGBackgroundSubtraction mg(nb_gauss,downsample);
 	mg.init(data);
 
 	for(int i = nb_frame_init; i < files.size(); i++)
 	{
 		cv::Mat img = cv::imread(std::string(path) + files[i], CV_LOAD_IMAGE_COLOR);
-		Mat mask = Mat::zeros(img.rows, img.cols, CV_8UC1);
+		Mat mask = Mat::zeros(img.rows/downsample, img.cols/downsample, CV_8UC1);
+		auto t1 = std::chrono::high_resolution_clock::now();
 		mg.createMask(img, mask);
-		cv::imshow("MyWindow", mask);
+		auto t2 = std::chrono::high_resolution_clock::now();
+	    std::chrono::duration<double, std::milli> fp_ms = t2 - t1;
+	    std::cout << "Mask created in " << fp_ms.count() << "ms" << std::endl;
+		cv::imshow("mask", mask);
+		cv::imshow("img", img);
 		if (cv::waitKey(30) == 27) 
    		{
        	 	std::cout << "esc key is pressed by user" << std::endl;

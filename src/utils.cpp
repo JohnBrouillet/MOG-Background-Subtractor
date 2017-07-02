@@ -12,7 +12,7 @@ std::vector<std::string> open_files(std::string path)
     {
         for(i =0 ; i < n; ++i)
         {
-        	if(namelist[i]->d_name == std::string(".") || namelist[i]->d_name == std::string(".."))
+        	if(namelist[i]->d_name == std::string(".") || namelist[i]->d_name == std::string("..") || namelist[i]->d_name == std::string(".directory"))
     			continue;
             files.push_back(namelist[i]->d_name);
             free(namelist[i]);
