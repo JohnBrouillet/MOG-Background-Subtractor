@@ -5,7 +5,8 @@
 const int nb_frame_init = 50;
 const int nb_gauss = 3;
 const int downsample = 2;
-const double thresh = 500;
+const int max_area = 10000;
+int area_thresh = 500;
 
 void createBox(cv::Mat& mask, cv::Mat& img)
 {
@@ -17,7 +18,7 @@ void createBox(cv::Mat& mask, cv::Mat& img)
 	for( int i = 0; i< contours.size(); i++ )
     {   
         double area = cv::contourArea(contours[i],false);
-        if(area > thresh){
+        if(area > area_thresh){
             bounding_rect = cv::boundingRect(contours[i]);
             cv::rectangle(img, bounding_rect,  Scalar(0,255,0),1, 8,0);
            // putText(im,"Moving object detected",Point(0,20),1,1,Scalar(0,255,0),1);
@@ -52,7 +53,9 @@ void cam_loop(cv::VideoCapture& cap)
 
 		mg.createMask(img, mask);
 		createBox(mask, img_clone);
-		cv::imshow("MyWindow", img_clone);
+		cv::imshow("Camera", img_clone);
+		cv::imshow("Mask", mask);
+		cv::createTrackbar("Threshold", "Camera", &area_thresh, max_area);
 		if (cv::waitKey(30) == 27) 
    		{
        	 	std::cout << "esc key is pressed by user" << std::endl;
@@ -114,8 +117,6 @@ void video(std::string path)
 {
 	cv::VideoCapture cap(path);
 	cv::VideoWriter vw;
-	cv::namedWindow("MyWindow", CV_WINDOW_AUTOSIZE);
-
 
 	cv::Mat img;
 	cap >> img;
@@ -130,7 +131,6 @@ void video(std::string path)
 void camera(std::string path)
 {
 	cv::VideoCapture cap(atoi(path.c_str()));
-	cv::namedWindow("MyWindow", CV_WINDOW_AUTOSIZE);
 
 	cam_loop(cap);
 }
