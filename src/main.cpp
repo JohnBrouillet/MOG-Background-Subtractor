@@ -4,7 +4,7 @@
 
 const int nb_frame_init = 50;
 const int nb_gauss = 3;
-const int downsample = 2;
+const int downsample = 1;
 const int max_area = 10000;
 int area_thresh = 500;
 
@@ -21,12 +21,11 @@ void createBox(cv::Mat& mask, cv::Mat& img)
         if(area > area_thresh){
             bounding_rect = cv::boundingRect(contours[i]);
             cv::rectangle(img, bounding_rect,  Scalar(0,255,0),1, 8,0);
-           // putText(im,"Moving object detected",Point(0,20),1,1,Scalar(0,255,0),1);
         }       
     }
 }
 
-void cam_loop(cv::VideoCapture& cap)
+void cam_loop(cv::VideoCapture& cap, cv::VideoWriter vw, bool save = false)
 {
 	std::vector<cv::Mat> data;
 	for(int i = 0; i < nb_frame_init; i++)
@@ -62,6 +61,9 @@ void cam_loop(cv::VideoCapture& cap)
         	break; 
    		}
 		
+   		if(save)
+   			vw.write(img_clone);
+
    		count++; 
 		if(count == 30)
 		{
@@ -103,6 +105,7 @@ void image(std::string path)
 	    createBox(mask, img_clone);
 		cv::imshow("mask", mask);
 		cv::imshow("img", img_clone);
+
 		if (cv::waitKey(30) == 27) 
    		{
        	 	std::cout << "esc key is pressed by user" << std::endl;
@@ -122,17 +125,18 @@ void video(std::string path)
 	cap >> img;
 	int frame_width = cap.get(CV_CAP_PROP_FRAME_WIDTH);
 	int frame_height = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
-	//vw = cv::VideoWriter(std::string(argv[2])+"-output.avi", CV_FOURCC('M','J','P','G'),10, Size(frame_width,frame_height),true);
+	vw = cv::VideoWriter(path + "-output.avi", CV_FOURCC('M','J','P','G'),25, Size(frame_width,frame_height),true);
 
-	cam_loop(cap);
+	cam_loop(cap, vw, true);
 
 }
 
 void camera(std::string path)
 {
 	cv::VideoCapture cap(atoi(path.c_str()));
+	cv::VideoWriter vw;
 
-	cam_loop(cap);
+	cam_loop(cap, vw);
 }
 
 int main(int argc, char** argv)
