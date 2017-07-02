@@ -1,4 +1,4 @@
-#include "mgg_substractor.h"
+#include "mog_subtractor.h"
 
 MOGBackgroundSubtraction::MOGBackgroundSubtraction(int _N, int _ratio)
 {

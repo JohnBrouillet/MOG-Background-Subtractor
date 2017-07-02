@@ -1,6 +1,6 @@
 #include <iostream>
 #include "utils.h"
-#include "mgg_substractor.h"
+#include "mog_subtractor.h"
 
 const int nb_frame_init = 50;
 const int nb_gauss = 3;

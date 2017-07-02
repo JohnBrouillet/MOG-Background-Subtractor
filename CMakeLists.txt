@@ -5,13 +5,13 @@ find_package(OpenCV REQUIRED)
 set(SOURCES 
 	src/main.cpp 
 	src/utils.cpp
-	src/mgg_substractor.cpp
+	src/mog_subtractor.cpp
 	)
 
 set(HEADERS
 	src/opencv_include.h
 	src/utils.h
-	src/mgg_substractor.h
+	src/mog_subtractor.h
 	)
 
 if(OPENMP_FOUND)
