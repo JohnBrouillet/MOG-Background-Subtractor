@@ -1,14 +1,16 @@
 #include "mog_subtractor.h"
 
-MOGBackgroundSubtraction::MOGBackgroundSubtraction(int _N, int _ratio)
+MOGBackgroundSubtraction::MOGBackgroundSubtraction(int _K, float _a, float _T, int _downsample)
 {
-	nb_gauss = _N;
-	ratio = _ratio;
+	nb_gauss = _K;
+	downsample = _downsample;
+	a = _a;
+	T = _T;
 }
 
 void MOGBackgroundSubtraction::wrapTransform(Mat& input)
 {
-	cv::resize(input, input, cv::Size(), 1.0/ratio, 1.0/ratio);
+	cv::resize(input, input, cv::Size(), 1.0/downsample, 1.0/downsample);
 	cv::cvtColor(input, input, CV_BGR2GRAY);
 }
 
@@ -75,21 +77,24 @@ void MOGBackgroundSubtraction::train(Mat& line, int id_line, Mat& _cov, Mat& _me
 
 	// in order to avoid lim cov = 0
 	Mat tmp;
-	threshold(_cov.row(id_line), tmp, sig_min, sig_min, THRESH_BINARY_INV);
+	threshold(_cov.row(id_line), tmp, cov_min, cov_min, THRESH_BINARY_INV);
 	_cov.row(id_line) += tmp;
 }
 
 
-void MOGBackgroundSubtraction::createMask(Mat& X, Mat& mask)
+Mat MOGBackgroundSubtraction::createMask(Mat& img)
 {
-	wrapTransform(X);
+	wrapTransform(img);
 
+	Mat mask = Mat::zeros(img.rows, img.cols, CV_8UC1);
 	Mat maha, mask_own, prob, least_prob;
 	divide(weight, cov, least_prob);
-	isInGaussian(X, maha, mask_own);
+	isInGaussian(img, maha, mask_own);
 	computeGaussianProbDensity(maha, prob);
-	masking(X, mask, mask_own, least_prob, prob);
+	masking(img, mask, mask_own, least_prob, prob);
+	morphoOp(mask);
 
+	return mask;
 }
 
 void MOGBackgroundSubtraction::isInGaussian(Mat& X, Mat& maha, Mat& mask_own)
@@ -138,7 +143,7 @@ void MOGBackgroundSubtraction::masking(Mat& X, Mat& mask, Mat& mask_own, Mat& le
 	uchar* pixel = X.data;
 	int i;
 
-	#pragma omp parallel for shared(_cov, _mean, _weight, case_data, mask_data, pixel), private(i)
+	#pragma omp parallel for shared(least_prob, prob, _cov, _mean, _weight, case_data, mask_data, pixel), private(i)
 	for(i = 0; i < WH; i++)
 	{
 		Mat tmp_p = prob.row(i), tmp_l = least_prob.row(i), tmp_c = _cov.row(i), tmp_m = _mean.row(i), tmp_w = _weight.row(i);
@@ -163,7 +168,10 @@ void MOGBackgroundSubtraction::masking(Mat& X, Mat& mask, Mat& mask_own, Mat& le
 			update_case2(pix, tmp_l, tmp_c, tmp_m, tmp_w);
 		}
 	}
+}
 
+void MOGBackgroundSubtraction::morphoOp(Mat& mask)
+{
 	Mat erodeElement = getStructuringElement(MORPH_RECT, Size(3,3));
 	Mat erodeElement2 = getStructuringElement(MORPH_RECT, Size(5,5));
 	Mat dilateElement = getStructuringElement(MORPH_RECT, Size(5,5));
@@ -186,8 +194,8 @@ void MOGBackgroundSubtraction::update_case1(uchar X, int idx_match, Mat& prob, M
 
 			double m = _mean.at<double>(0,i);
 			double val = (1.0-r)*_cov.at<double>(0,i) + r*((double)X - m)*((double)X - m);
-			if(val < sig_min)
-				_cov.at<double>(0,i) = sig_min;
+			if(val < cov_min)
+				_cov.at<double>(0,i) = cov_min;
 			else
 				_cov.at<double>(0,i) = val;
 		}
@@ -203,7 +211,7 @@ void MOGBackgroundSubtraction::update_case2(uchar X, Mat& least_prob, Mat& _cov,
 	sortIdx(least_prob, idx, CV_SORT_EVERY_ROW + CV_SORT_ASCENDING);
 	int least = idx.data[0];
 
-	_cov.at<double>(0,least) = 50;
+	_cov.at<double>(0,least) = 100;
 	_mean.at<double>(0, least) = (double)X;
 	_weight.at<double>(0, least) = 0.1;
 }

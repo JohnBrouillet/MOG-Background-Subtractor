@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
-project(mgg)
+project(mog)
 find_package(OpenCV REQUIRED)
 
 set(SOURCES 
@@ -22,5 +22,5 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 	set(CMAKE_CXX_FLAGS "-O2 -march=corei7-avx -fopenmp")
 endif()
 
-add_executable(mgg ${SOURCES} ${HEADERS})
-target_link_libraries(mgg ${OpenCV_LIBS})
+add_executable(mog ${SOURCES} ${HEADERS})
+target_link_libraries(mog ${OpenCV_LIBS})

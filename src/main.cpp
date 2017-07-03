@@ -17,10 +17,10 @@ void createBox(cv::Mat& mask, cv::Mat& img)
 
 	for( int i = 0; i< contours.size(); i++ )
     {   
-        double area = cv::contourArea(contours[i],false);
+        double area = cv::contourArea(contours[i], false);
         if(area > area_thresh){
             bounding_rect = cv::boundingRect(contours[i]);
-            cv::rectangle(img, bounding_rect,  Scalar(0,255,0),1, 8,0);
+            cv::rectangle(img, bounding_rect, Scalar(0,255,0), 1, 8, 0);
         }       
     }
 }
@@ -46,11 +46,11 @@ void cam_loop(cv::VideoCapture& cap, cv::VideoWriter vw, bool save = false)
 		
 		cv::Mat img, img_clone;
 		cap >> img;
-		Mat mask = Mat::zeros(img.rows/downsample, img.cols/downsample, CV_8UC1);
+
 		img_clone = img.clone();
 		cv::resize(img_clone, img_clone, cv::Size(), 1.0/downsample, 1.0/downsample);
 
-		mg.createMask(img, mask);
+		Mat mask = mg.createMask(img);
 		createBox(mask, img_clone);
 		cv::imshow("Camera", img_clone);
 		cv::imshow("Mask", mask);
@@ -89,23 +89,23 @@ void image(std::string path)
 		data.push_back(img);
 	}
 
-	MOGBackgroundSubtraction mg(nb_gauss,downsample);
+	MOGBackgroundSubtraction mg(nb_gauss, downsample);
 	mg.init(data);
 
 	for(int i = nb_frame_init; i < files.size(); i++)
 	{
 		cv::Mat img = cv::imread(std::string(path) + files[i], CV_LOAD_IMAGE_COLOR);
 		cv::Mat img_clone = img.clone();
-		cv::Mat mask = Mat::zeros(img.rows/downsample, img.cols/downsample, CV_8UC1);
+
 		auto t1 = std::chrono::high_resolution_clock::now();
-		mg.createMask(img, mask);
+		Mat mask = mg.createMask(img);
 		auto t2 = std::chrono::high_resolution_clock::now();
 	    std::chrono::duration<double, std::milli> fp_ms = t2 - t1;
 	    std::cout << "Mask created in " << fp_ms.count() << "ms" << std::endl;
 	    createBox(mask, img_clone);
 		cv::imshow("mask", mask);
 		cv::imshow("img", img_clone);
-
+	
 		if (cv::waitKey(30) == 27) 
    		{
        	 	std::cout << "esc key is pressed by user" << std::endl;
@@ -121,8 +121,6 @@ void video(std::string path)
 	cv::VideoCapture cap(path);
 	cv::VideoWriter vw;
 
-	cv::Mat img;
-	cap >> img;
 	int frame_width = cap.get(CV_CAP_PROP_FRAME_WIDTH);
 	int frame_height = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
 	vw = cv::VideoWriter(path + "-output.avi", CV_FOURCC('M','J','P','G'),25, Size(frame_width,frame_height),true);
@@ -136,7 +134,11 @@ void camera(std::string path)
 	cv::VideoCapture cap(atoi(path.c_str()));
 	cv::VideoWriter vw;
 
-	cam_loop(cap, vw);
+	int frame_width = cap.get(CV_CAP_PROP_FRAME_WIDTH);
+	int frame_height = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
+	vw = cv::VideoWriter("cam-output.avi", CV_FOURCC('M','J','P','G'),25, Size(frame_width,frame_height),true);
+
+	cam_loop(cap, vw, true);
 }
 
 int main(int argc, char** argv)
