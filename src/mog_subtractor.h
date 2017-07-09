@@ -68,7 +68,7 @@ private:
 	float a;
 	float T;
 
-	Mat cov, mean, weight;
+	Mat cov, mean, weight, element3, element5;
 
 };
 

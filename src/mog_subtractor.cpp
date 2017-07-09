@@ -6,6 +6,9 @@ MOGBackgroundSubtraction::MOGBackgroundSubtraction(int _K, float _a, float _T, i
 	downsample = _downsample;
 	a = _a;
 	T = _T;
+
+	element5 = getStructuringElement(MORPH_RECT, Size(5,5));
+	element3 = getStructuringElement(MORPH_RECT, Size(3,3));
 }
 
 void MOGBackgroundSubtraction::wrapTransform(Mat& input)
@@ -104,18 +107,15 @@ void MOGBackgroundSubtraction::isInGaussian(Mat& X, Mat& maha, Mat& mask_own)
 	repeat(in, 1, nb_gauss, out);
 
 	out.convertTo(out, CV_64F);
-	Mat tmp = out-mean;
+	Mat diff = out-mean;
 
 	Mat sqrt_cov;
 	sqrt(cov, sqrt_cov);
-	divide(tmp, cov, maha);
+	divide(diff, sqrt_cov, maha);
 
-	Mat maha2;
-	divide(tmp, sqrt_cov, maha2);
+	mask_own = (maha < k) & (maha > -k); //if 255, the gaussian is matched
 
-	mask_own = (maha2 < k) & (maha2 > -k); //if 255, the gaussian is matched
-
-	multiply(maha, tmp, maha);
+	multiply(maha, maha, maha);
 }
 
 void MOGBackgroundSubtraction::computeGaussianProbDensity(Mat& maha, Mat& probDensity)
@@ -172,14 +172,9 @@ void MOGBackgroundSubtraction::masking(Mat& X, Mat& mask, Mat& mask_own, Mat& le
 
 void MOGBackgroundSubtraction::morphoOp(Mat& mask)
 {
-	Mat erodeElement = getStructuringElement(MORPH_RECT, Size(3,3));
-	Mat erodeElement2 = getStructuringElement(MORPH_RECT, Size(5,5));
-	Mat dilateElement = getStructuringElement(MORPH_RECT, Size(5,5));
-	Mat dilateElement2 = getStructuringElement(MORPH_RECT, Size(3,3));
-
-	dilate(mask, mask, dilateElement2);
-	erode(mask, mask, erodeElement2);
-	dilate(mask, mask, dilateElement);
+	erode(mask,mask, element3);
+	dilate(mask, mask, element5);
+	dilate(mask, mask, element5);	
 }
 
 void MOGBackgroundSubtraction::update_case1(uchar X, int idx_match, Mat& prob, Mat& _cov, Mat& _mean, Mat& _weight)

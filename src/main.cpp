@@ -3,7 +3,7 @@
 #include "mog_subtractor.h"
 
 const int nb_frame_init = 50;
-const int nb_gauss = 3;
+const int nb_gauss = 5;
 const int downsample = 1;
 const int max_area = 10000;
 int area_thresh = 500;
@@ -81,6 +81,7 @@ void image(std::string path)
 {
 	cv::namedWindow("mask", CV_WINDOW_AUTOSIZE);
 	cv::namedWindow("img", CV_WINDOW_AUTOSIZE);
+	checkMaskDirExist(path);
 	std::vector<std::string> files = open_files(path);
 	std::vector<cv::Mat> data;
 	for(int i = 0; i < nb_frame_init; i++)
@@ -92,26 +93,28 @@ void image(std::string path)
 	MOGBackgroundSubtraction mg(nb_gauss, downsample);
 	mg.init(data);
 
-	for(int i = nb_frame_init; i < files.size(); i++)
+	auto t1 = std::chrono::high_resolution_clock::now();
+	for(int i = nb_frame_init; i < files.size()-1; i++)
 	{
 		cv::Mat img = cv::imread(std::string(path) + files[i], CV_LOAD_IMAGE_COLOR);
 		cv::Mat img_clone = img.clone();
 
-		auto t1 = std::chrono::high_resolution_clock::now();
+		
 		Mat mask = mg.createMask(img);
-		auto t2 = std::chrono::high_resolution_clock::now();
-	    std::chrono::duration<double, std::milli> fp_ms = t2 - t1;
-	    std::cout << "Mask created in " << fp_ms.count() << "ms" << std::endl;
+	
 	    createBox(mask, img_clone);
 		cv::imshow("mask", mask);
 		cv::imshow("img", img_clone);
-	
+		imwrite(path + "/mask/" + files[i] + ".bmp", mask);
 		if (cv::waitKey(30) == 27) 
    		{
        	 	std::cout << "esc key is pressed by user" << std::endl;
         	break; 
    		}
 	}
+	auto t2 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> fp_ms = t2 - t1;
+    std::cout << files.size() - nb_frame_init << " masks computed in "<< fp_ms.count()*1e-3 << "s" << std::endl;
 
 }
 
