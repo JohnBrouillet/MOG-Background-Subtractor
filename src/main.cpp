@@ -3,8 +3,8 @@
 #include "mog_subtractor.h"
 
 const int nb_frame_init = 50;
-const int nb_gauss = 5;
-const int downsample = 1;
+const int nb_gauss = 3;
+const int downsample = 2;
 const int max_area = 10000;
 int area_thresh = 500;
 
@@ -42,18 +42,15 @@ void cam_loop(cv::VideoCapture& cap, cv::VideoWriter vw, bool save = false)
 	int count = 0;
 	auto t1 = std::chrono::high_resolution_clock::now();
 	while(1)
-	{
-		
-		cv::Mat img, img_clone;
+	{	
+		cv::Mat img;
 		cap >> img;
 
-		img_clone = img.clone();
-		cv::resize(img_clone, img_clone, cv::Size(), 1.0/downsample, 1.0/downsample);
-
 		Mat mask = mg.createMask(img);
-		createBox(mask, img_clone);
-		cv::imshow("Camera", img_clone);
+		createBox(mask, img);
+		cv::imshow("Camera", img);
 		cv::imshow("Mask", mask);
+
 		cv::createTrackbar("Threshold", "Camera", &area_thresh, max_area);
 		if (cv::waitKey(30) == 27) 
    		{
@@ -62,7 +59,11 @@ void cam_loop(cv::VideoCapture& cap, cv::VideoWriter vw, bool save = false)
    		}
 		
    		if(save)
-   			vw.write(img_clone);
+   		{
+   			cvtColor(img, img, CV_GRAY2BGR);
+   			vw.write(img);
+   		}
+   			
 
    		count++; 
 		if(count == 30)
@@ -124,8 +125,8 @@ void video(std::string path)
 	cv::VideoCapture cap(path);
 	cv::VideoWriter vw;
 
-	int frame_width = cap.get(CV_CAP_PROP_FRAME_WIDTH);
-	int frame_height = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
+	int frame_width = cap.get(CV_CAP_PROP_FRAME_WIDTH) / downsample;
+	int frame_height = cap.get(CV_CAP_PROP_FRAME_HEIGHT) / downsample;
 	vw = cv::VideoWriter(path + "-output.avi", CV_FOURCC('M','J','P','G'),25, Size(frame_width,frame_height),true);
 
 	cam_loop(cap, vw, true);
@@ -137,11 +138,11 @@ void camera(std::string path)
 	cv::VideoCapture cap(atoi(path.c_str()));
 	cv::VideoWriter vw;
 
-	int frame_width = cap.get(CV_CAP_PROP_FRAME_WIDTH);
-	int frame_height = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
+	int frame_width = cap.get(CV_CAP_PROP_FRAME_WIDTH) / downsample;
+	int frame_height = cap.get(CV_CAP_PROP_FRAME_HEIGHT) / downsample;
 	vw = cv::VideoWriter("cam-output.avi", CV_FOURCC('M','J','P','G'),25, Size(frame_width,frame_height),true);
 
-	cam_loop(cap, vw, true);
+	cam_loop(cap, vw, false);
 }
 
 int main(int argc, char** argv)

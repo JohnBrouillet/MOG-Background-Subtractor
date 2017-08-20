@@ -25,7 +25,7 @@ public:
 	 0 < ratio < 1 : image size is increased 
 	 a is the learning rate.
 	 T is the minimal weight for a gaussian distribution to be considered as a background 	   */
-	MOGBackgroundSubtraction(int _K = 3, float _a = 0.9, float _T = 0.5, int _downsample = 1);
+	MOGBackgroundSubtraction(int _K = 3, int _downsample = 1, float _a = 0.9, float _T = 0.5);
 
 	/* Initialize the W*H*K gaussians. */
 	void init(std::vector<Mat>& imgs);

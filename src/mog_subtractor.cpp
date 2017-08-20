@@ -1,6 +1,7 @@
 #include "mog_subtractor.h"
 
-MOGBackgroundSubtraction::MOGBackgroundSubtraction(int _K, float _a, float _T, int _downsample)
+
+MOGBackgroundSubtraction::MOGBackgroundSubtraction(int _K, int _downsample, float _a, float _T)
 {
 	nb_gauss = _K;
 	downsample = _downsample;
@@ -129,6 +130,7 @@ void MOGBackgroundSubtraction::computeGaussianProbDensity(Mat& maha, Mat& probDe
 
 void MOGBackgroundSubtraction::masking(Mat& X, Mat& mask, Mat& mask_own, Mat& least_prob, Mat& prob)
 {
+	auto t1 = std::chrono::high_resolution_clock::now();
 	Mat what_case;
 	reduce(mask_own, what_case, 1, CV_REDUCE_SUM, CV_32SC1); 
 	what_case = what_case > 0; // if 255, a gaussian is matched
@@ -168,6 +170,39 @@ void MOGBackgroundSubtraction::masking(Mat& X, Mat& mask, Mat& mask_own, Mat& le
 			update_case2(pix, tmp_l, tmp_c, tmp_m, tmp_w);
 		}
 	}
+
+	/*mask.forEach<uint8_t>
+	(
+		[&](uint8_t &p, const int position[])->void{
+			int i = position[0]*position[1];
+
+			Mat tmp_p = prob.row(i), tmp_l = least_prob.row(i), tmp_c = cov.row(i), tmp_m = mean.row(i), tmp_w = weight.row(i);
+			uchar cas = case_data[i];
+			uchar pix = pixel[i];
+			if(cas)
+			{
+				double min, max; int minidx[2], maxidx[2];
+				Mat tmp_match = mask_own.row(i);
+				minMaxIdx(tmp_w, &min, &max, minidx, maxidx, tmp_match);
+
+				if(tmp_w.at<double>(0,maxidx[1]) > T)
+					p = 0;
+				else
+					p = 255;
+
+				update_case1(pix, maxidx[1], tmp_p, tmp_c, tmp_m, tmp_w);
+			}
+			else
+			{
+				p = 255;			
+				update_case2(pix, tmp_l, tmp_c, tmp_m, tmp_w);
+			}
+		}
+	);*/
+
+	auto t2 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> fp_ms = t2 - t1;
+    std::cout << "Frame masked in " << fp_ms.count() << "ms" << std::endl;
 }
 
 void MOGBackgroundSubtraction::morphoOp(Mat& mask)
