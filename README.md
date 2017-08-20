@@ -8,7 +8,7 @@ You only need openCV 3. Building openCV with openMP and the MKL, and compile wit
 ## Usage
 Constructor parameters are the number of gaussians to model the background and the foreground for one pixel (3 to 5), the learning rate, the minimum weight for a gaussian distribution to be classified as a background and a coefficient to reduce the size of the image for better calculation time. By default, these parameters are set to 3, 1, 0.9 and 0.5. See [1] and [2] to set the learning rate and the minimum weight.
 
-    MOGBackgroundSubtraction(int _K = 3, float _a = 0.9, float _T = 0.5, int _downsample = 1);
+    MOGBackgroundSubtraction(int _K = 3, int _downsample = 1, float _a = 0.9, float _T = 0.5);
 
 Just two methods are needed :
 
